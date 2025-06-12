@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Crop Price Prediction</title>
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  /* Agricultural theme styling */
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f4f8f0; /* Light green background */
+    color: #2c3e50;
+    margin: 0;
+    padding: 20px;
+    background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), 
+                      url('https://img.freepik.com/free-photo/top-view-vegetables-fruits-bag_23-2148949707.jpg');
+    background-size: cover;
+    background-attachment: fixed;
+  }
+
+  h1 {
+    text-align: center;
+    color: #2d6a4f; /* Dark green */
+    margin-bottom: 30px;
+    font-weight: 700;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+  }
+
+  form {
+    max-width: 600px;
+    background: #fff;
+    padding: 25px;
+    margin: 0 auto 40px auto;
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+    border-top: 5px solid #40916c; /* Green top border */
+  }
+
+  label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #2d6a4f; /* Dark green */
+  }
+
+  input[type="number"],
+  select {
+    width: 100%;
+    padding: 10px 12px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    border: 1px solid #b7e4c7; /* Light green border */
+    font-size: 1rem;
+    transition: all 0.3s;
+    background-color: #f8faf5; /* Very light green background */
+  }
+
+  input[type="number"]:focus,
+  select:focus {
+    outline: none;
+    border-color: #40916c; /* Medium green */
+    box-shadow: 0 0 5px #95d5b2; /* Light green glow */
+    background-color: #ffffff;
+  }
+
+  button {
+    background: linear-gradient(to right, #40916c, #52b788); /* Green gradient */
+    color: white;
+    border: none;
+    padding: 14px 20px;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    width: 100%;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  button:hover {
+    background: linear-gradient(to right, #2d6a4f, #40916c); /* Darker green gradient */
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  #result-section {
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    padding: 25px;
+    border-radius: 14px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    border-top: 5px solid #40916c; /* Green top border */
+  }
+
+  #chart-container {
+    width: 100%;
+    margin-bottom: 35px;
+    background-color: #ffffff;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  th, td {
+    padding: 12px 15px;
+    text-align: center;
+    border-bottom: 1px solid #d8f3dc; /* Very light green */
+  }
+
+  th {
+    background-color: #40916c; /* Medium green */
+    color: white;
+    font-weight: 700;
+  }
+
+  tbody tr:hover {
+    background-color: #d8f3dc; /* Very light green */
+  }
+
+  tbody tr:nth-child(even) {
+    background-color: #f8faf5; /* Alternate row color */
+  }
+
+  @media (max-width: 650px) {
+    form, #result-section {
+      padding: 15px;
+    }
+    th, td {
+      padding: 8px 10px;
+    }
+  }
+</style>
+</head>
+<body>
+<h1>🌾 Crop Price Prediction & Trend 📈</h1>
+
+<form id="input-form">
+  <label for="year">Year</label>
+  <input type="number" id="year" name="year" min="2000" max="2100" required placeholder="Enter Year" />
+
+  <label for="month">Month</label>
+  <select id="month" name="month" required>
+    <option value="" disabled selected>Select Month</option>
+    <option value="1">January</option>
+    <option value="2">February</option>
+    <option value="3">March</option>
+    <option value="4">April</option>
+    <option value="5">May</option>
+    <option value="6">June</option>
+    <option value="7">July</option>
+    <option value="8">August</option>
+    <option value="9">September</option>
+    <option value="10">October</option>
+    <option value="11">November</option>
+    <option value="12">December</option>
+  </select>
+
+  <label for="district">District</label>
+  <select id="district" name="district" required>
+    <option value="" disabled selected>Select District</option>
+    <option value="District1">District1</option>
+    <option value="District2">District2</option>
+    <option value="District3">District3</option>
+    <option value="District4">District4</option>
+    <option value="District5">District5</option>
+  </select>
+
+  <label for="crop">Crop</label>
+  <select id="crop" name="crop" required>
+    <option value="" disabled selected>Select Crop</option>
+    <option value="Wheat">Wheat</option>
+    <option value="Rice">Rice</option>
+    <option value="Corn">Corn</option>
+    <option value="Barley">Barley</option>
+    <option value="Soybean">Soybean</option>
+  </select>
+
+  <label for="rainfall">Rainfall (mm)</label>
+  <input type="number" id="rainfall" name="rainfall" min="0" step="0.01" required placeholder="e.g., 50" />
+
+  <button type="submit">Predict Price</button>
+</form>
+
+<div id="result-section" style="display:none;">
+  <div id="chart-container">
+    <canvas id="priceTrendChart" aria-label="Price Trend Chart" role="img"></canvas>
+  </div>
+
+  <table id="priceTable" aria-label="Price Table">
+    <thead>
+      <tr>
+        <th>Year</th>
+        <th>Month</th>
+        <th>Price (/Quintals in ₹)</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<script>
+  const form = document.getElementById('input-form');
+  const resultSection = document.getElementById('result-section');
+  const priceTableBody = document.querySelector('#priceTable tbody');
+  let chart = null;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    // Gather inputs
+    const year = Number(form.year.value);
+    const month = Number(form.month.value);
+    const district = form.district.value;
+    const crop = form.crop.value;
+    const rainfall = Number(form.rainfall.value);
+
+    // Simple client-side validation
+    if (!year || !month || !district || !crop || rainfall < 0) {
+      alert('Please fill all fields correctly.');
+      return;
+    }
+
+    // Prepare payload
+    const payload = { year, month, district, crop, rainfall };
+
+    try {
+      const response = await fetch('/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        alert('Error: ' + (errData.error || 'Failed to get prediction'));
+        return;
+      }
+
+      const data = await response.json();
+
+      // Show results section
+      resultSection.style.display = 'block';
+
+      // Render Chart
+      renderChart(data.months, data.trend_prices, data.crop, data.year);
+
+      // Render Table
+      renderTable(data.table_data);
+
+    } catch (err) {
+      alert('An error occurred while fetching prediction.');
+      console.error(err);
+    }
+  });
+
+  function renderChart(months, prices, crop, year) {
+    const ctx = document.getElementById('priceTrendChart').getContext('2d');
+
+    // Destroy previous chart if exists
+    if (chart) {
+      chart.destroy();
+    }
+
+    chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: months,
+        datasets: [{
+          label: 'Price (/Quintals in ₹)',
+          data: prices,
+          fill: true,
+          backgroundColor: 'rgba(82, 183, 136, 0.2)', /* Light green with transparency */
+          borderColor: '#40916c', /* Medium green */
+          tension: 0.3,
+          pointRadius: 5,
+          pointBackgroundColor: '#2d6a4f', /* Dark green */
+          pointHoverRadius: 7,
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: true,
+            text: `${crop} Price Trend - ${year}`,
+            font: { size: 20, weight: 'bold' },
+            color: '#2d6a4f' /* Dark green */
+          },
+          legend: {
+            display: true,
+            labels: {
+              color: '#2d6a4f', /* Dark green */
+              font: { size: 14 }
+            }
+          },
+          tooltip: {
+            mode: 'index',
+            intersect: false,
+            backgroundColor: 'rgba(45, 106, 79, 0.8)', /* Dark green with transparency */
+          }
+        },
+        interaction: {
+          mode: 'nearest',
+          intersect: false
+        },
+        scales: {
+          y: {
+            title: {
+              display: true,
+              text: 'Price (/Quintals in ₹)'
+            },
+            beginAtZero: true,
+            ticks: {
+              color: '#2d6a4f', /* Dark green */
+              font: { size: 13 }
+            },
+            grid: {
+              color: 'rgba(183, 228, 199, 0.3)' /* Very light green grid lines */
+            }
+          },
+          x: {
+            title: {
+              display: true,
+              text: 'Month'
+            },
+            ticks: {
+              color: '#2d6a4f', /* Dark green */
+              font: { size: 13 }
+            },
+            grid: {
+              color: 'rgba(183, 228, 199, 0.3)' /* Very light green grid lines */
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function renderTable(tableData) {
+    // Clear existing rows
+    priceTableBody.innerHTML = '';
+
+    // Get the user-selected month (from the form)
+    const selectedMonth = Number(form.month.value);
+    
+    // Calculate previous and next month indices (handling January and December edge cases)
+    const prevMonthIndex = selectedMonth > 1 ? selectedMonth - 2 : 11; // -2 because array is 0-indexed
+    const currentMonthIndex = selectedMonth - 1; // -1 because array is 0-indexed
+    const nextMonthIndex = selectedMonth < 12 ? selectedMonth : 0; // January if selected month is December
+    
+    // Only show 3 months: the selected month, one before, and one after
+    const monthsToShow = [prevMonthIndex, currentMonthIndex, nextMonthIndex];
+    
+    monthsToShow.forEach(monthIndex => {
+      if (tableData[monthIndex]) {
+        const row = tableData[monthIndex];
+        const tr = document.createElement('tr');
+        const yearTd = document.createElement('td');
+        const monthTd = document.createElement('td');
+        const priceTd = document.createElement('td');
+
+        yearTd.textContent = row.year;
+        monthTd.textContent = row.month;
+        priceTd.textContent = row.price;
+        
+        // Highlight the selected month
+        if (monthIndex === currentMonthIndex) {
+          tr.style.backgroundColor = 'rgba(82, 183, 136, 0.2)';
+          tr.style.fontWeight = 'bold';
+        }
+
+        tr.appendChild(yearTd);
+        tr.appendChild(monthTd);
+        tr.appendChild(priceTd);
+
+        priceTableBody.appendChild(tr);
+      }
+    });
+  }
+</script>
+</body>
+</html>
+
