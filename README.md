@@ -66,7 +66,7 @@ If you encounter any issues:
 2. Check that the Python version is 3.6 or higher
 3. Verify that the model file `random_forest_model.pkl` is present in the application directory
 
-## Credits
+## Note
 
 This application uses:
 - Flask for the backend API
